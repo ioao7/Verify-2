@@ -2,45 +2,45 @@
 import { GoogleGenAI } from "@google/genai";
 import { AnalysisResult, MediaFile } from "../types";
 
-// Inicializamos el cliente.
+// Inicializamos el cliente con la variable de entorno que ya configuraste en Vercel.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const FLASH_MODEL = "gemini-3-flash-preview";
 const PRO_MODEL = "gemini-3-pro-preview";
 
-const SYSTEM_INSTRUCTION_BASE = `ERES UN ANALISTA FORENSE DIGITAL DE ÉLITE Y VERIFICADOR DE HECHOS.
-TU MISIÓN: Determinar si el contenido es REAL, MANIPULADO o GENERADO POR IA.
+const SYSTEM_INSTRUCTION_FORENSIC = `ACTÚA COMO UN LABORATORIO DE INVESTIGACIÓN FORENSE DIGITAL.
+TU OBJETIVO: Desmantelar desinformación y detectar contenido generado o manipulado.
 
-PROTOCOLO DE ACCIÓN:
-1. IDENTIFICACIÓN DE IA: Busca "alucinaciones" visuales, texturas matemáticas y falta de coherencia anatómica. Si es generado íntegramente por IA, el veredicto DEBE ser IA_GENERADO.
-2. MANIPULACIÓN HUMANA: Si la base es real pero hay edición (Photoshop, cortes, deepfakes parciales), es MANIPULADO.
-3. DATOS EXTERNOS: Sé extremadamente preciso con nombres de creadores y fechas. Si no estás seguro por Google Search, no inventes.
-4. IDIOMA: Responde siempre en ESPAÑOL.
+PROTOCOLOS DE ANÁLISIS:
+1. ANÁLISIS DE PÍXEL: Busca inconsistencias en bordes, ruido digital no uniforme y artefactos de compresión sospechosos.
+2. COHERENCIA FÍSICA: Analiza sombras, reflejos en los ojos y leyes de la física. La IA suele fallar en la dirección de la luz.
+3. RASTREO DE HISTORIAL: Utiliza Google Search para encontrar la PRIMERA aparición de este contenido. Si existe desde antes de la fecha del evento que dice representar, es FALSO.
+4. DETECCIÓN DE IA: Identifica texturas "smooth" o excesivamente perfectas, errores en manos, dientes o fondos desenfocados de forma matemática.
 
-RESPONDE EXCLUSIVAMENTE CON UN OBJETO JSON PLANO (SIN MARKDOWN).
-
-Estructura:
+ESTRUCTURA DE RESPUESTA (JSON PURO):
 {
   "isFake": boolean,
   "confidence": number,
   "verdict": "AUTÉNTICO" | "SOSPECHOSO" | "MANIPULADO" | "IA_GENERADO",
-  "reasoning": ["punto 1", "punto 2", ...],
+  "reasoning": ["Evidencia técnica 1", "Evidencia técnica 2", ...],
   "forensicDetails": {
-    "artifactDetection": "Detalles técnicos",
-    "lightingInconsistency": "Análisis de sombras/luz",
-    "aiSignature": "Evidencia de IA"
+    "artifactDetection": "Descripción detallada de fallos en píxeles",
+    "lightingInconsistency": "Análisis de vectores de luz",
+    "aiSignature": "Probabilidad y rastro de modelo generativo"
   },
   "searchFound": boolean
-}`;
+}
+
+IDIOMA: ESPAÑOL. NO INCLUYAS MARKDOWN NI TEXTO EXTRA.`;
 
 async function runAnalysis(model: string, media: MediaFile, isEscalated: boolean = false): Promise<AnalysisResult> {
   const contents: any[] = [];
   const prompt = isEscalated 
-    ? `ANÁLISIS DE ALTA PRECISIÓN REQUERIDO. El escaneo inicial fue inconcluso. Profundiza en los metadatos visuales y busca confirmación externa rigurosa.\n${SYSTEM_INSTRUCTION_BASE}`
-    : SYSTEM_INSTRUCTION_BASE;
+    ? `MODO DE ALTA PRECISIÓN: Realiza un escaneo bit a bit. El análisis inicial requiere verificación profunda de fuentes externas.\n${SYSTEM_INSTRUCTION_FORENSIC}`
+    : SYSTEM_INSTRUCTION_FORENSIC;
 
   if (media.type === 'link' && media.link) {
-    contents.push({ text: `${prompt}\n\nAnaliza este link: ${media.link}` });
+    contents.push({ text: `${prompt}\n\nURL DE INVESTIGACIÓN: ${media.link}` });
   } else if (media.file) {
     const base64Data = await fileToBase64(media.file);
     contents.push({
@@ -55,10 +55,13 @@ async function runAnalysis(model: string, media: MediaFile, isEscalated: boolean
   const response = await ai.models.generateContent({
     model,
     contents: { parts: contents },
-    config: { tools: [{ googleSearch: {} }] }
+    config: { 
+      tools: [{ googleSearch: {} }],
+      temperature: 0.1 // Baja temperatura para mayor rigor técnico
+    }
   });
 
-  const textOutput = response.text || "";
+  const textOutput = response.text || "{}";
   let parsed: any;
   
   try {
@@ -66,41 +69,38 @@ async function runAnalysis(model: string, media: MediaFile, isEscalated: boolean
     const jsonEnd = textOutput.lastIndexOf('}') + 1;
     parsed = JSON.parse(textOutput.substring(jsonStart, jsonEnd));
   } catch (e) {
-    throw new Error("Error en el formato de respuesta de la IA.");
+    console.error("Error parsing JSON, raw text:", textOutput);
+    throw new Error("El motor forense devolvió un formato no legible. Reintentando...");
   }
 
   const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
   const searchSources = groundingChunks
     .filter((chunk: any) => chunk.web)
     .map((chunk: any) => ({
-      title: chunk.web.title || "Fuente externa",
+      title: chunk.web.title || "Evidencia Web",
       uri: chunk.web.uri
     }));
 
   return {
     ...parsed,
     searchSources,
-    // Marcamos si este resultado vino de una IA de mayor nivel
     highPrecision: isEscalated || model === PRO_MODEL 
   };
 }
 
 export async function analyzeMedia(media: MediaFile): Promise<AnalysisResult> {
   try {
-    // Etapa 1: Análisis rápido con Flash
-    console.log("Iniciando análisis rápido (Flash)...");
-    const initialResult = await runAnalysis(FLASH_MODEL, media);
+    // Fase 1: Escaneo con Flash (Rápido y eficiente)
+    const result = await runAnalysis(FLASH_MODEL, media);
 
-    // Lógica de escalado: si la confianza es baja (< 80) o el veredicto es ambiguo
-    if (initialResult.confidence < 80 || initialResult.verdict === 'SOSPECHOSO') {
-      console.log("Confianza baja o veredicto dudoso. Escalando a Pro...");
+    // Escalado automático si hay dudas razonables
+    if (result.confidence < 85 || result.verdict === 'SOSPECHOSO') {
       return await runAnalysis(PRO_MODEL, media, true);
     }
 
-    return initialResult;
+    return result;
   } catch (error) {
-    console.error("Fallo en el pipeline de análisis:", error);
-    // Si Flash falla por completo, intentamos Pro como último recurso
+    // Fallback a Pro si Flash encuentra errores
     return await runAnalysis(PRO_MODEL, media, true);
   }
 }

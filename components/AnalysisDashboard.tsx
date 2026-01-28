@@ -9,147 +9,179 @@ interface AnalysisDashboardProps {
 }
 
 const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ result, media, onReset }) => {
-  const getVerdictStyles = (verdict: string) => {
+  const getVerdictColor = (verdict: string) => {
     switch (verdict) {
-      case 'AUTÉNTICO': return 'text-[#00df81] border-[#00df8130] bg-[#00df8105]';
-      case 'SOSPECHOSO': return 'text-yellow-400 border-yellow-400/30 bg-yellow-400/05';
-      case 'MANIPULADO': return 'text-orange-500 border-orange-500/30 bg-orange-500/05';
-      case 'IA_GENERADO': return 'text-red-500 border-red-500/30 bg-red-500/05';
-      default: return 'text-white border-white/20 bg-white/5';
+      case 'AUTÉNTICO': return '#00df81';
+      case 'SOSPECHOSO': return '#facc15';
+      case 'MANIPULADO': return '#f97316';
+      case 'IA_GENERADO': return '#ef4444';
+      default: return '#ffffff';
     }
   };
 
+  const verdictColor = getVerdictColor(result.verdict);
+
   return (
-    <div className="space-y-8 animate-in fade-in zoom-in duration-500">
-      {/* Overview Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Preview */}
-        <div className="bg-[#111] p-2 rounded-xl border border-white/10 shadow-2xl">
-          <div className="rounded-lg overflow-hidden bg-black aspect-video flex items-center justify-center relative group">
-            <div className="absolute top-4 left-4 z-10 bg-black/80 px-2 py-1 rounded text-[10px] font-bold text-[#00df81] uppercase tracking-widest border border-[#00df8120]">
-              Evidencia Analizada
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Sección Superior: Impacto Visual */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#00df81] to-transparent opacity-20 blur group-hover:opacity-40 transition duration-1000"></div>
+          <div className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="absolute top-4 left-4 z-20">
+              <span className="bg-black/80 backdrop-blur-md text-[#00df81] text-[10px] font-black px-3 py-1 rounded-full border border-[#00df81/30] uppercase tracking-widest">
+                Evidencia ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
+              </span>
             </div>
-            {result.highPrecision && (
-              <div className="absolute bottom-4 right-4 z-10 bg-[#00df81] text-black px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter shadow-lg flex items-center gap-1">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                DeepScan Pro Activo
-              </div>
-            )}
-            {media.type === 'link' ? (
-              <div className="text-center p-8">
-                <svg className="w-12 h-12 text-gray-800 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                <p className="text-xs text-gray-600 break-all font-mono">{media.link}</p>
-              </div>
-            ) : media.type === 'video' ? (
-              <video src={media.previewUrl!} controls className="w-full h-full object-contain" />
-            ) : (
-              <img src={media.previewUrl!} alt="Preview" className="w-full h-full object-contain" />
-            )}
+            
+            <div className="aspect-video bg-black flex items-center justify-center overflow-hidden">
+              {media.type === 'link' ? (
+                <div className="text-center p-10 space-y-4">
+                  <div className="w-16 h-16 bg-[#00df8110] rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-[#00df81]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-gray-500 font-mono break-all">{media.link}</p>
+                </div>
+              ) : media.type === 'video' ? (
+                <video src={media.previewUrl!} controls className="w-full h-full object-contain" />
+              ) : (
+                <img src={media.previewUrl!} alt="Preview" className="w-full h-full object-contain" />
+              )}
+            </div>
+            
+            {/* Overlay de Escaneo */}
+            <div className="absolute inset-0 pointer-events-none border-t border-[#00df81/10] bg-gradient-to-b from-[#00df8105] to-transparent h-1/2 animate-[scan_3s_ease-in-out_infinite]"></div>
           </div>
         </div>
 
-        {/* Status */}
-        <div className="flex flex-col justify-center space-y-6">
-          <div className="space-y-2">
-            <div className={`inline-flex items-center px-3 py-1.5 rounded border text-[10px] font-black tracking-[0.2em] ${getVerdictStyles(result.verdict)}`}>
-              VEREDICTO: {result.verdict}
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <div 
+              className="inline-block px-4 py-1.5 rounded-full border text-[10px] font-black tracking-[0.3em] uppercase transition-all duration-500"
+              style={{ color: verdictColor, borderColor: `${verdictColor}40`, backgroundColor: `${verdictColor}08` }}
+            >
+              • {result.verdict} DETECTADO
             </div>
             
-            <h2 className="text-4xl font-black text-white leading-none uppercase tracking-tighter italic">
-              {result.isFake ? 'Contenido Comprometido' : 'Autenticidad Verificada'}
+            <h2 className="text-5xl font-black text-white leading-tight tracking-tighter italic">
+              RESULTADO DEL <span className="text-[#00df81]">ANÁLISIS</span>
             </h2>
             
-            <p className="text-gray-500 text-sm font-medium">
-              El motor VerifAI ha concluido el escaneo utilizando {result.highPrecision ? 'redes de alta densidad' : 'redes neuronales rápidas'}.
+            <p className="text-gray-400 text-sm leading-relaxed max-w-lg">
+              Nuestro motor forense ha procesado los vectores visuales y comparado las huellas digitales en la red global.
             </p>
           </div>
 
-          <div className="flex items-center gap-6 bg-[#111] border border-white/10 p-6 rounded-xl">
-             <div className="flex flex-col">
-              <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Confianza</span>
-              <span className="text-5xl font-black text-[#00df81] tracking-tighter">{result.confidence}%</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#111] border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-30 transition-opacity">
+                <svg className="w-12 h-12 text-[#00df81]" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1a1 1 0 112 0v1a1 1 0 11-2 0zM13.536 14.95a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707z" />
+                </svg>
+              </div>
+              <span className="block text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Índice de Confianza</span>
+              <span className="text-5xl font-black text-white tracking-tighter">{result.confidence}<span className="text-[#00df81] text-2xl">%</span></span>
             </div>
-            <div className="w-px h-12 bg-white/10"></div>
-             <div className="flex flex-col">
-              <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Búsqueda Web</span>
-              <span className="text-lg font-bold text-white uppercase">{result.searchFound ? 'Coincidencias' : 'Único'}</span>
+            
+            <div className="bg-[#111] border border-white/5 p-6 rounded-2xl">
+              <span className="block text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Fuentes Web</span>
+              <span className="text-xl font-bold text-white uppercase tracking-tight">
+                {result.searchFound ? 'Encontradas' : 'Contenido Único'}
+              </span>
+              <p className="text-[9px] text-gray-600 mt-2 font-mono uppercase tracking-tighter">
+                {result.searchSources.length} Referencias cruzadas
+              </p>
             </div>
           </div>
 
           <button 
             onClick={onReset}
-            className="flex items-center gap-2 text-[#00df81] hover:text-white transition-all font-black text-[10px] uppercase tracking-widest group"
+            className="w-full py-4 rounded-xl border border-[#00df81/20] text-[#00df81] font-black text-xs uppercase tracking-[0.2em] hover:bg-[#00df81] hover:text-black transition-all duration-500 shadow-lg shadow-[#00df8105]"
           >
-            <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Nuevo Escaneo
+            Realizar Nuevo Escaneo Forense
           </button>
         </div>
       </div>
 
-      {/* Details Grid */}
+      {/* Grid de Detalles Técnicos */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Reasons */}
-        <div className="md:col-span-2 bg-[#111] p-8 rounded-xl border border-white/10">
-          <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-6">Hallazgos Críticos</h4>
-          <ul className="space-y-4">
-            {result.reasoning.map((reason, i) => (
-              <li key={i} className="flex gap-4 items-start group">
-                <span className="flex-shrink-0 w-6 h-6 bg-white/5 border border-white/10 text-[#00df81] rounded flex items-center justify-center text-[10px] font-black">{i+1}</span>
-                <p className="text-gray-400 text-sm leading-relaxed group-hover:text-white transition-colors">{reason}</p>
-              </li>
-            ))}
-          </ul>
+        <div className="md:col-span-2 bg-[#0a0a0a] border border-white/5 rounded-2xl p-10 space-y-8">
+          <div>
+            <h3 className="text-[11px] font-black text-white uppercase tracking-[0.4em] mb-8 flex items-center gap-3">
+              <span className="w-1.5 h-1.5 bg-[#00df81] rounded-full animate-pulse"></span>
+              Hallazgos de la Investigación
+            </h3>
+            <div className="space-y-6">
+              {result.reasoning.map((reason, i) => (
+                <div key={i} className="flex gap-6 group">
+                  <span className="text-[10px] font-black text-gray-700 group-hover:text-[#00df81] transition-colors pt-1">0{i+1}</span>
+                  <p className="text-gray-300 text-sm leading-relaxed border-b border-white/5 pb-4 w-full group-hover:text-white transition-colors">
+                    {reason}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Forensic Report */}
-        <div className="bg-[#00df81] text-black p-8 rounded-xl shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-          <h4 className="text-[10px] font-black mb-8 uppercase tracking-[0.3em]">Módulo Forense 0x1</h4>
-          <div className="space-y-6 relative z-10">
-            <div>
-              <p className="text-[9px] font-black uppercase opacity-60 mb-1">Artefactos</p>
-              <p className="text-xs font-bold leading-snug">{result.forensicDetails.artifactDetection}</p>
+        <div className="bg-[#00df81] text-black rounded-2xl p-10 flex flex-col justify-between shadow-[0_0_50px_-12px_rgba(0,223,129,0.3)]">
+          <div className="space-y-8">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.4em] border-b border-black/10 pb-4">Reporte Forense</h3>
+            
+            <div className="space-y-6">
+              <div className="group">
+                <span className="block text-[9px] font-black uppercase opacity-60 mb-1 tracking-widest">Artefactos</span>
+                <p className="text-xs font-black leading-tight">{result.forensicDetails.artifactDetection}</p>
+              </div>
+              <div className="group">
+                <span className="block text-[9px] font-black uppercase opacity-60 mb-1 tracking-widest">Iluminación</span>
+                <p className="text-xs font-black leading-tight">{result.forensicDetails.lightingInconsistency}</p>
+              </div>
+              <div className="group">
+                <span className="block text-[9px] font-black uppercase opacity-60 mb-1 tracking-widest">Firma de IA</span>
+                <p className="text-xs font-black leading-tight">{result.forensicDetails.aiSignature}</p>
+              </div>
             </div>
-            <div className="h-px bg-black/10"></div>
-            <div>
-              <p className="text-[9px] font-black uppercase opacity-60 mb-1">Iluminación</p>
-              <p className="text-xs font-bold leading-snug">{result.forensicDetails.lightingInconsistency}</p>
-            </div>
-            <div className="h-px bg-black/10"></div>
-            <div>
-              <p className="text-[9px] font-black uppercase opacity-60 mb-1">Firma IA</p>
-              <p className="text-xs font-bold leading-snug">{result.forensicDetails.aiSignature}</p>
-            </div>
+          </div>
+          
+          <div className="pt-10 flex justify-between items-end">
+             <div className="text-[40px] font-black leading-none opacity-20 italic select-none">316ADS</div>
+             <div className="text-[9px] font-bold uppercase tracking-tighter opacity-60">Verified Lab</div>
           </div>
         </div>
       </div>
 
-      {/* Web Search Grounding */}
+      {/* Web Sources */}
       {result.searchSources.length > 0 && (
-        <div className="bg-[#111] p-8 rounded-xl border border-white/10">
-          <h4 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-6">Rastros Digitales (Web Grounding)</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-1000">
+           <h3 className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] mb-6 px-2">Huella Digital en Internet</h3>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {result.searchSources.map((source, i) => (
               <a 
                 key={i} 
                 href={source.uri} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="bg-black/40 p-4 rounded border border-white/5 hover:border-[#00df81] transition-all group"
+                className="bg-[#111] border border-white/5 p-5 rounded-xl hover:border-[#00df81/40] hover:bg-[#151515] transition-all group"
               >
-                <p className="text-xs font-bold text-white line-clamp-1 group-hover:text-[#00df81]">{source.title}</p>
-                <p className="text-[9px] text-gray-600 truncate mt-2 font-mono">{source.uri}</p>
+                <p className="text-[11px] font-bold text-gray-200 line-clamp-2 group-hover:text-[#00df81] transition-colors">
+                  {source.title}
+                </p>
+                <p className="text-[9px] text-gray-600 truncate mt-3 font-mono">{new URL(source.uri).hostname}</p>
               </a>
             ))}
           </div>
         </div>
       )}
+      
+      <style>{`
+        @keyframes scan {
+          0%, 100% { transform: translateY(0); opacity: 0.1; }
+          50% { transform: translateY(100%); opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 };
