@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Header from './components/Header';
 import FileUploader from './components/FileUploader';
 import AnalysisDashboard from './components/AnalysisDashboard';
@@ -8,9 +8,40 @@ import { AnalysisResult, MediaFile } from './types';
 
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [media, setMedia] = useState<MediaFile | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Simulación de progreso de carga más inteligente y fluida
+  useEffect(() => {
+    let interval: any;
+    if (loading) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 99) return 99;
+          
+          // Lógica de progresión: rápido al principio, lento al final
+          let increment = 0;
+          if (prev < 30) {
+            increment = Math.random() * 8 + 2; // Rápido (Carga inicial)
+          } else if (prev < 70) {
+            increment = Math.random() * 3 + 0.5; // Medio (Análisis de píxel)
+          } else if (prev < 90) {
+            increment = Math.random() * 1 + 0.1; // Lento (Búsqueda web)
+          } else {
+            increment = Math.random() * 0.2; // Muy lento (Verificación final)
+          }
+          
+          return Math.min(prev + increment, 99.5);
+        });
+      }, 300);
+    } else {
+      // No reseteamos a 0 inmediatamente para que la transición a 100% se vea
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleMediaSelect = useCallback(async (selectedMedia: MediaFile) => {
     setMedia(selectedMedia);
@@ -20,11 +51,15 @@ const App: React.FC = () => {
 
     try {
       const analysis = await analyzeMedia(selectedMedia);
-      setResult(analysis);
+      setProgress(100); // Salto final al terminar
+      // Pequeño delay para que el usuario vea el 100% antes de cambiar de pantalla
+      setTimeout(() => {
+        setResult(analysis);
+        setLoading(false);
+      }, 600);
     } catch (err: any) {
       console.error("Analysis failed:", err);
       setError("No pudimos conectar con el motor de análisis. Por favor, verifica tu conexión o intenta más tarde.");
-    } finally {
       setLoading(false);
     }
   }, []);
@@ -33,6 +68,7 @@ const App: React.FC = () => {
     setMedia(null);
     setResult(null);
     setError(null);
+    setProgress(0);
   };
 
   return (
@@ -55,35 +91,84 @@ const App: React.FC = () => {
             </div>
             
             <h1 className="text-7xl md:text-8xl font-black tracking-tighter uppercase italic leading-[0.9]">
-              Análisis <br />
-              <span className="text-[#00df81] drop-shadow-[0_0_15px_rgba(0,223,129,0.3)]">de Verdad</span>
+              Detección <br />
+              <span className="text-[#00df81] drop-shadow-[0_0_15px_rgba(0,223,129,0.3)]">Forense</span>
             </h1>
             
             <p className="text-gray-500 max-w-2xl mx-auto text-sm md:text-base font-medium leading-relaxed tracking-tight">
-              Herramienta avanzada para la verificación de imágenes y videos. 
-              Detecta fácilmente si un contenido ha sido creado con Inteligencia Artificial o si ha sido manipulado.
+              Herramienta avanzada para la verificación de integridad de medios digitales. 
+              Identifica patrones de Inteligencia Artificial y manipulaciones con precisión forense.
             </p>
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Loading State con Preview y Scanner Multilínea */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-32 space-y-12 relative z-10">
-            <div className="relative w-32 h-32">
-              <div className="absolute inset-0 border-[3px] border-[#00df8110] rounded-full"></div>
-              <div className="absolute inset-0 border-[3px] border-t-[#00df81] rounded-full animate-spin"></div>
-              <div className="absolute inset-4 border-[1px] border-[#00df8130] rounded-full animate-[reverse_spin_2s_linear_infinite]"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-[10px] font-black text-[#00df81] animate-pulse">316ADS</div>
+          <div className="flex flex-col items-center justify-center py-10 space-y-12 relative z-10 animate-in fade-in duration-500">
+            <div className="relative w-full max-w-2xl aspect-video rounded-2xl overflow-hidden border border-white/10 bg-[#0a0a0a] shadow-[0_0_50px_-12px_rgba(0,0,0,1)]">
+              {/* Media Preview */}
+              <div className="absolute inset-0 z-0">
+                {media?.type === 'video' ? (
+                  <video src={media.previewUrl!} className="w-full h-full object-cover opacity-30 grayscale contrast-125" autoPlay muted loop />
+                ) : media?.type === 'image' ? (
+                  <img src={media.previewUrl!} className="w-full h-full object-cover opacity-30 grayscale contrast-125" alt="Preview" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#111] text-gray-800 font-mono text-[10px] uppercase tracking-[0.5em]">Sincronizando Metadatos Externos...</div>
+                )}
+              </div>
+
+              {/* Advanced Scan Overlay Lines (Múltiples líneas finas) */}
+              <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
+                {/* Línea Principal */}
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-[#00df81] shadow-[0_0_15px_2px_#00df81] animate-[scan_3s_ease-in-out_infinite]"></div>
+                {/* Estela 1 */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00df81/40] animate-[scan_3s_ease-in-out_infinite] [animation-delay:-100ms] opacity-50"></div>
+                {/* Estela 2 */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00df81/20] animate-[scan_3s_ease-in-out_infinite] [animation-delay:-200ms] opacity-30"></div>
+                {/* Estela 3 */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00df81/10] animate-[scan_3s_ease-in-out_infinite] [animation-delay:-300ms] opacity-20"></div>
+                
+                <div className="absolute inset-0 bg-gradient-to-b from-[#00df8105] via-transparent to-[#00df8105] animate-pulse"></div>
+              </div>
+
+              {/* Porcentaje Central Mejorado (Círculo sin cortes) */}
+              <div className="absolute inset-0 flex items-center justify-center z-30 bg-black/20 backdrop-blur-[2px]">
+                <div className="relative flex items-center justify-center">
+                  <svg className="w-48 h-48 transform -rotate-90 overflow-visible" viewBox="0 0 160 160">
+                    <circle cx="80" cy="80" r="72" stroke="currentColor" strokeWidth="2" fill="transparent" className="text-white/5" />
+                    <circle 
+                      cx="80" 
+                      cy="80" 
+                      r="72" 
+                      stroke="currentColor" 
+                      strokeWidth="3" 
+                      fill="transparent" 
+                      strokeDasharray={452.39} 
+                      strokeDashoffset={452.39 - (452.39 * progress) / 100} 
+                      className="text-[#00df81] transition-all duration-300 ease-linear" 
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-5xl font-black text-white tracking-tighter">{Math.round(progress)}%</span>
+                    <span className="text-[9px] font-black text-[#00df81] tracking-[0.4em] uppercase mt-1">Status</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-[#00df81]">Analizando Contenido</h2>
-              <div className="flex flex-col gap-2 text-[11px] text-gray-600 font-bold uppercase tracking-[0.4em]">
-                <span className="animate-pulse">Revisando detalles de imagen...</span>
-                <span className="animate-pulse delay-75">Buscando fuentes originales en internet...</span>
-                <span className="animate-pulse delay-150">Verificando patrones de inteligencia artificial...</span>
+            <div className="text-center space-y-6">
+              <h2 className="text-xl font-black uppercase tracking-[0.3em] italic text-[#00df81]">Procesando Evidencia Forense</h2>
+              <div className="flex flex-col items-center gap-2 text-[10px] text-gray-500 font-bold uppercase tracking-[0.4em]">
+                <div className="h-1 w-48 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#00df81] transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                </div>
+                <span className="mt-2 opacity-60">
+                  {progress < 30 ? 'Inicializando vectores...' : 
+                   progress < 70 ? 'Analizando integridad de píxeles...' : 
+                   progress < 95 ? 'Consultando registros globales...' : 
+                   'Generando reporte final...'}
+                </span>
               </div>
             </div>
           </div>
@@ -137,7 +222,7 @@ const App: React.FC = () => {
           </div>
           
           <div className="text-center">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">© 2025 316ADS Labs</p>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">© 2026 316ADS Labs</p>
             <p className="text-[9px] font-medium text-gray-700 mt-2 uppercase">Protegiendo la integridad de la información</p>
           </div>
 
@@ -147,6 +232,13 @@ const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      <style>{`
+        @keyframes scan {
+          0% { top: 0; }
+          100% { top: 100%; }
+        }
+      `}</style>
     </div>
   );
 };

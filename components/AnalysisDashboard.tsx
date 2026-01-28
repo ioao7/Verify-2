@@ -42,7 +42,7 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ result, media, on
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                   </div>
-                  <p className="text-xs text-gray-500 font-mono break-all">{media.link}</p>
+                  <p className="text-xs text-gray-500 font-mono break-all px-4">{media.link}</p>
                 </div>
               ) : media.type === 'video' ? (
                 <video src={media.previewUrl!} controls className="w-full h-full object-contain" />
@@ -50,38 +50,47 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ result, media, on
                 <img src={media.previewUrl!} alt="Preview" className="w-full h-full object-contain" />
               )}
             </div>
-            
-            {/* Overlay de Escaneo */}
-            <div className="absolute inset-0 pointer-events-none border-t border-[#00df81/10] bg-gradient-to-b from-[#00df8105] to-transparent h-1/2 animate-[scan_3s_ease-in-out_infinite]"></div>
           </div>
         </div>
 
         <div className="space-y-8">
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Primero el título general como solicitó el usuario */}
+            <h2 className="text-5xl font-black text-white leading-tight tracking-tighter italic uppercase">
+              Resultado del <span className="text-[#00df81]">Análisis</span>
+            </h2>
+
+            {/* Veredicto más grande y llamativo */}
             <div 
-              className="inline-block px-4 py-1.5 rounded-full border text-[10px] font-black tracking-[0.3em] uppercase transition-all duration-500"
-              style={{ color: verdictColor, borderColor: `${verdictColor}40`, backgroundColor: `${verdictColor}08` }}
+              className="inline-block px-10 py-5 rounded-2xl border text-4xl font-black tracking-tighter uppercase transition-all duration-500 shadow-[0_0_20px_rgba(0,0,0,0.3)] animate-pulse"
+              style={{ 
+                color: verdictColor, 
+                borderColor: `${verdictColor}40`, 
+                backgroundColor: `${verdictColor}05`,
+                boxShadow: `0 0 40px -10px ${verdictColor}30`
+              }}
             >
-              • {result.verdict} DETECTADO
+              {result.verdict.replace('_', ' ')}
             </div>
             
-            <h2 className="text-5xl font-black text-white leading-tight tracking-tighter italic">
-              RESULTADO DEL <span className="text-[#00df81]">ANÁLISIS</span>
-            </h2>
-            
-            <p className="text-gray-400 text-sm leading-relaxed max-w-lg">
-              Nuestro motor forense ha procesado los vectores visuales y comparado las huellas digitales en la red global.
+            <p className="text-gray-400 text-sm leading-relaxed max-w-lg font-medium">
+              Nuestro motor forense ha procesado los vectores visuales y comparado las huellas digitales en la red global para determinar la integridad de la pieza.
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-[#111] border border-white/5 p-6 rounded-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-30 transition-opacity">
-                <svg className="w-12 h-12 text-[#00df81]" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1a1 1 0 112 0v1a1 1 0 11-2 0zM13.536 14.95a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707z" />
-                </svg>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="block text-[10px] text-gray-500 font-black uppercase tracking-widest">Índice de Confianza</span>
+                <div className="group/info relative cursor-help">
+                  <svg className="w-3 h-3 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                  </svg>
+                  <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-black border border-white/10 rounded-lg text-[9px] font-bold text-gray-400 uppercase tracking-tight leading-normal opacity-0 group-hover/info:opacity-100 transition-opacity z-50 pointer-events-none">
+                    Grado de certeza estadística basado en ruido digital, coherencia de metadatos y patrones biométricos.
+                  </div>
+                </div>
               </div>
-              <span className="block text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Índice de Confianza</span>
               <span className="text-5xl font-black text-white tracking-tighter">{result.confidence}<span className="text-[#00df81] text-2xl">%</span></span>
             </div>
             
@@ -117,7 +126,7 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ result, media, on
               {result.reasoning.map((reason, i) => (
                 <div key={i} className="flex gap-6 group">
                   <span className="text-[10px] font-black text-gray-700 group-hover:text-[#00df81] transition-colors pt-1">0{i+1}</span>
-                  <p className="text-gray-300 text-sm leading-relaxed border-b border-white/5 pb-4 w-full group-hover:text-white transition-colors">
+                  <p className="text-gray-300 text-sm leading-relaxed border-b border-white/5 pb-4 w-full group-hover:text-white transition-colors font-medium">
                     {reason}
                   </p>
                 </div>
@@ -133,15 +142,15 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ result, media, on
             <div className="space-y-6">
               <div className="group">
                 <span className="block text-[9px] font-black uppercase opacity-60 mb-1 tracking-widest">Artefactos</span>
-                <p className="text-xs font-black leading-tight">{result.forensicDetails.artifactDetection}</p>
+                <p className="text-xs font-black leading-tight uppercase tracking-tight">{result.forensicDetails.artifactDetection}</p>
               </div>
               <div className="group">
                 <span className="block text-[9px] font-black uppercase opacity-60 mb-1 tracking-widest">Iluminación</span>
-                <p className="text-xs font-black leading-tight">{result.forensicDetails.lightingInconsistency}</p>
+                <p className="text-xs font-black leading-tight uppercase tracking-tight">{result.forensicDetails.lightingInconsistency}</p>
               </div>
               <div className="group">
                 <span className="block text-[9px] font-black uppercase opacity-60 mb-1 tracking-widest">Firma de IA</span>
-                <p className="text-xs font-black leading-tight">{result.forensicDetails.aiSignature}</p>
+                <p className="text-xs font-black leading-tight uppercase tracking-tight">{result.forensicDetails.aiSignature}</p>
               </div>
             </div>
           </div>
@@ -175,13 +184,6 @@ const AnalysisDashboard: React.FC<AnalysisDashboardProps> = ({ result, media, on
           </div>
         </div>
       )}
-      
-      <style>{`
-        @keyframes scan {
-          0%, 100% { transform: translateY(0); opacity: 0.1; }
-          50% { transform: translateY(100%); opacity: 0.3; }
-        }
-      `}</style>
     </div>
   );
 };
