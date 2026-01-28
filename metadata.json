@@ -1,0 +1,5 @@
+{
+  "name": "VerifAI - Detector Forense de Fake News",
+  "description": "Herramienta avanzada de análisis forense para detectar imágenes y videos generados por IA o manipulados, utilizando Google Gemini 2.5 Flash con búsqueda en tiempo real.",
+  "requestFramePermissions": []
+}
