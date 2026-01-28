@@ -23,7 +23,7 @@ const App: React.FC = () => {
       setResult(analysis);
     } catch (err: any) {
       console.error("Analysis failed:", err);
-      setError("Error en la conexión con el nodo forense. Verifica tu API KEY y reintenta.");
+      setError("No pudimos conectar con el motor de análisis. Por favor, verifica tu conexión o intenta más tarde.");
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ const App: React.FC = () => {
       <Header />
       
       <main className="flex-grow max-w-6xl mx-auto px-6 py-16 w-full relative">
-        {/* Decorative Grid background */}
+        {/* Fondo decorativo de cuadrícula */}
         <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#00df81 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
 
         {/* Hero Section */}
@@ -51,17 +51,17 @@ const App: React.FC = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00df81] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00df81]"></span>
               </span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00df81]">Nodos Activos: Google Gemini 2.5</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00df81]">Motor de verificación activo</span>
             </div>
             
             <h1 className="text-7xl md:text-8xl font-black tracking-tighter uppercase italic leading-[0.9]">
               Análisis <br />
-              <span className="text-[#00df81] drop-shadow-[0_0_15px_rgba(0,223,129,0.3)]">Forense IA</span>
+              <span className="text-[#00df81] drop-shadow-[0_0_15px_rgba(0,223,129,0.3)]">de Verdad</span>
             </h1>
             
             <p className="text-gray-500 max-w-2xl mx-auto text-sm md:text-base font-medium leading-relaxed tracking-tight">
-              Herramienta de grado militar para la verificación de integridad multimedia. 
-              Detecta manipulaciones, deepfakes y desinformación mediante escaneo neuronal profundo.
+              Herramienta avanzada para la verificación de imágenes y videos. 
+              Detecta fácilmente si un contenido ha sido creado con Inteligencia Artificial o si ha sido manipulado.
             </p>
           </div>
         )}
@@ -79,11 +79,11 @@ const App: React.FC = () => {
             </div>
             
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-[#00df81]">Procesando Evidencia</h2>
+              <h2 className="text-2xl font-black uppercase tracking-[0.2em] italic text-[#00df81]">Analizando Contenido</h2>
               <div className="flex flex-col gap-2 text-[11px] text-gray-600 font-bold uppercase tracking-[0.4em]">
-                <span className="animate-pulse">Cálculo de entropía de píxeles...</span>
-                <span className="animate-pulse delay-75">Escaneo de metadatos térmicos...</span>
-                <span className="animate-pulse delay-150">Sincronización con archivos mundiales...</span>
+                <span className="animate-pulse">Revisando detalles de imagen...</span>
+                <span className="animate-pulse delay-75">Buscando fuentes originales en internet...</span>
+                <span className="animate-pulse delay-150">Verificando patrones de inteligencia artificial...</span>
               </div>
             </div>
           </div>
@@ -98,10 +98,10 @@ const App: React.FC = () => {
               </svg>
             </div>
             <div>
-              <p className="text-[11px] font-black uppercase tracking-widest mb-1">Fallo de Sistema</p>
+              <p className="text-[11px] font-black uppercase tracking-widest mb-1">Algo salió mal</p>
               <p className="text-sm font-medium opacity-80">{error}</p>
             </div>
-            <button onClick={resetAnalysis} className="ml-auto bg-red-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors">Reiniciar</button>
+            <button onClick={resetAnalysis} className="ml-auto bg-red-500 text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors">Reintentar</button>
           </div>
         )}
 
@@ -132,13 +132,13 @@ const App: React.FC = () => {
             </div>
             <div>
               <span className="text-xl font-black text-white italic uppercase tracking-tighter block leading-none">Verif<span className="text-[#00df81]">AI</span></span>
-              <span className="text-[9px] font-bold text-gray-700 uppercase tracking-widest">Intelligence Division</span>
+              <span className="text-[9px] font-bold text-gray-700 uppercase tracking-widest">Tecnología de Verificación</span>
             </div>
           </div>
           
           <div className="text-center">
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">© 2025 316ADS Labs</p>
-            <p className="text-[9px] font-medium text-gray-700 mt-2 uppercase">Tecnología de Verificación Multimodal</p>
+            <p className="text-[9px] font-medium text-gray-700 mt-2 uppercase">Protegiendo la integridad de la información</p>
           </div>
 
           <div className="flex justify-end gap-10">
