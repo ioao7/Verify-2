@@ -87,7 +87,7 @@ const App: React.FC = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00df81] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00df81]"></span>
               </span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00df81]">Motor Pro V3.5 Ultra</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#00df81]">Motor Pro V3.16 Ultra</span>
             </div>
             
             <h1 className="text-7xl md:text-8xl font-black tracking-tighter uppercase italic leading-[0.9]">
@@ -149,7 +149,7 @@ const App: React.FC = () => {
                 <div className="h-1.5 w-80 bg-white/5 rounded-full overflow-hidden">
                   <div className="h-full bg-[#00df81] transition-all duration-300 shadow-[0_0_15px_#00df81]" style={{ width: `${progress}%` }}></div>
                 </div>
-                <span className="opacity-40 font-mono mt-2 tracking-[0.1em]">GEMINI_PRO_ENGINE_V3.5_SECURE</span>
+                <span className="opacity-40 font-mono mt-2 tracking-[0.1em]">GEMINI_PRO_ENGINE_V3.16_SECURE</span>
               </div>
             </div>
           </div>
