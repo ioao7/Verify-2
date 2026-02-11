@@ -2,45 +2,56 @@
 import { GoogleGenAI } from "@google/genai";
 import { AnalysisResult, MediaFile } from "../types";
 
-// Inicializamos el cliente con la variable de entorno que ya configuraste en Vercel.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const FLASH_MODEL = "gemini-3-flash-preview";
-const PRO_MODEL = "gemini-3-pro-preview";
+// Modelo de máxima capacidad de razonamiento y visión
+const MODEL_NAME = "gemini-3-pro-preview";
 
-const SYSTEM_INSTRUCTION_FORENSIC = `ACTÚA COMO UN LABORATORIO DE INVESTIGACIÓN FORENSE DIGITAL.
-TU OBJETIVO: Desmantelar desinformación y detectar contenido generado o manipulado.
+const SYSTEM_INSTRUCTION_FORENSIC = `ACTÚA COMO UN INVESTIGADOR FORENSE DE ÉLITE ESPECIALIZADO EN DEEPFAKES Y GENERACIÓN SINTÉTICA. 
 
-PROTOCOLOS DE ANÁLISIS:
-1. ANÁLISIS DE PÍXEL: Busca inconsistencias en bordes, ruido digital no uniforme y artefactos de compresión sospechosos.
-2. COHERENCIA FÍSICA: Analiza sombras, reflejos en los ojos y leyes de la física. La IA suele fallar en la dirección de la luz.
-3. RASTREO DE HISTORIAL: Utiliza Google Search para encontrar la PRIMERA aparición de este contenido. Si existe desde antes de la fecha del evento que dice representar, es FALSO.
-4. DETECCIÓN DE IA: Identifica texturas "smooth" o excesivamente perfectas, errores en manos, dientes o fondos desenfocados de forma matemática.
+TU MISIÓN: DEMOSTRAR QUE EL ARCHIVO ES FALSO. NO BUSQUES "SI ES REAL", BUSCA EL "ERROR MATEMÁTICO".
 
-ESTRUCTURA DE RESPUESTA (JSON PURO):
+PROTOCOLO DE DETECCIÓN DE IA DE ÚLTIMA GENERACIÓN:
+1. ANATOMÍA IMPOSIBLE: Mira los lóbulos de las orejas, los párpados y las comisuras de los labios. La IA suele "fusionar" estas partes con la piel circundante de forma antinatural.
+2. PERSISTENCIA DE DETALLES: Si es video, observa un detalle pequeño (un lunar, un botón, un reflejo). ¿Cambia de forma o posición entre frames? Si parpadea o se deforma, es IA_GENERADO.
+3. FÍSICA DE FLUIDOS Y CABELLO: El cabello en la IA a menudo se mueve como una "masa" sólida o tiene hilos que aparecen y desaparecen. Analiza si el movimiento sigue las leyes de la inercia real.
+4. MICRO-EXPRESIONES ASÍNCRONAS: Los humanos reales mueven docenas de micro-músculos al hablar. La IA suele tener una "máscara" facial donde solo se mueven ojos y boca, dejando el resto del rostro estático o con movimientos "gelatinosos".
+5. ERROR DE RUIDO DE SENSOR: Las cámaras reales producen ruido aleatorio (ISO). La IA produce un "alisado" o patrones de ruido repetitivos. Busca "suavidad excesiva" en texturas complejas como la piel.
+
+REGLAS DE DECISIÓN:
+- TODO ES FALSO HASTA QUE SE DEMUESTRE LO CONTRARIO.
+- Si la iluminación es "mágica" o "demasiado cinematográfica" sin una fuente de luz clara, marca como IA_GENERADO.
+- Si detectas UN SOLO FRAME donde un objeto se deforma o desaparece, el veredicto es IA_GENERADO.
+
+ESTRUCTURA OBLIGATORIA (JSON):
 {
   "isFake": boolean,
   "confidence": number,
   "verdict": "AUTÉNTICO" | "SOSPECHOSO" | "MANIPULADO" | "IA_GENERADO",
-  "reasoning": ["Evidencia técnica 1", "Evidencia técnica 2", ...],
+  "reasoning": [
+    "Evidencia de Renderizado: [Describe el fallo de textura o ruido]",
+    "Inconsistencia Física: [Describe el fallo en movimiento o anatomía]",
+    "Veredicto de Integridad: [Conclusión final basada en pruebas]"
+  ],
   "forensicDetails": {
-    "artifactDetection": "Descripción detallada de fallos en píxeles",
-    "lightingInconsistency": "Análisis de vectores de luz",
-    "aiSignature": "Probabilidad y rastro de modelo generativo"
+    "artifactDetection": "Detalle técnico del rastro algorítmico",
+    "lightingInconsistency": "Análisis de sombras y rebotes de luz",
+    "aiSignature": "Tipo de modelo generativo probable (Difusión, GAN, etc.)"
   },
   "searchFound": boolean
 }
 
-IDIOMA: ESPAÑOL. NO INCLUYAS MARKDOWN NI TEXTO EXTRA.`;
+RESPONDE ÚNICAMENTE EL JSON EN ESPAÑOL.`;
 
-async function runAnalysis(model: string, media: MediaFile, isEscalated: boolean = false): Promise<AnalysisResult> {
+export async function analyzeMedia(media: MediaFile): Promise<AnalysisResult> {
   const contents: any[] = [];
-  const prompt = isEscalated 
-    ? `MODO DE ALTA PRECISIÓN: Realiza un escaneo bit a bit. El análisis inicial requiere verificación profunda de fuentes externas.\n${SYSTEM_INSTRUCTION_FORENSIC}`
-    : SYSTEM_INSTRUCTION_FORENSIC;
+  
+  // Identificador único para evitar sesgos de memoria en el modelo
+  const sessionNonce = `FORENSIC_SIG_${Date.now()}_${Math.random().toString(36).toUpperCase()}`;
+  const highPrecisionPrompt = `${SYSTEM_INSTRUCTION_FORENSIC}\n\n[PROTOCOLO_ID: ${sessionNonce}]\nINICIA EL ESCANEO DE ALTA PRECISIÓN:`;
 
   if (media.type === 'link' && media.link) {
-    contents.push({ text: `${prompt}\n\nURL DE INVESTIGACIÓN: ${media.link}` });
+    contents.push({ text: `${highPrecisionPrompt}\nURL_OBJETIVO: ${media.link}` });
   } else if (media.file) {
     const base64Data = await fileToBase64(media.file);
     contents.push({
@@ -49,59 +60,37 @@ async function runAnalysis(model: string, media: MediaFile, isEscalated: boolean
         data: base64Data,
       },
     });
-    contents.push({ text: prompt });
+    contents.push({ text: highPrecisionPrompt });
   }
 
   const response = await ai.models.generateContent({
-    model,
+    model: MODEL_NAME,
     contents: { parts: contents },
     config: { 
       tools: [{ googleSearch: {} }],
-      temperature: 0.1 // Baja temperatura para mayor rigor técnico
+      temperature: 0, // Cero creatividad, máxima fidelidad técnica
+      thinkingConfig: { thinkingBudget: 32768 } // Máximo razonamiento para detectar Deepfakes de alta calidad
     }
   });
 
   const textOutput = response.text || "{}";
-  let parsed: any;
-  
   try {
     const jsonStart = textOutput.indexOf('{');
     const jsonEnd = textOutput.lastIndexOf('}') + 1;
-    parsed = JSON.parse(textOutput.substring(jsonStart, jsonEnd));
+    const result = JSON.parse(textOutput.substring(jsonStart, jsonEnd));
+
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const searchSources = groundingChunks
+      .filter((chunk: any) => chunk.web)
+      .map((chunk: any) => ({
+        title: chunk.web.title || "Evidencia Externa",
+        uri: chunk.web.uri
+      }));
+
+    return { ...result, searchSources };
   } catch (e) {
-    console.error("Error parsing JSON, raw text:", textOutput);
-    throw new Error("El motor forense devolvió un formato no legible. Reintentando...");
-  }
-
-  const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-  const searchSources = groundingChunks
-    .filter((chunk: any) => chunk.web)
-    .map((chunk: any) => ({
-      title: chunk.web.title || "Evidencia Web",
-      uri: chunk.web.uri
-    }));
-
-  return {
-    ...parsed,
-    searchSources,
-    highPrecision: isEscalated || model === PRO_MODEL 
-  };
-}
-
-export async function analyzeMedia(media: MediaFile): Promise<AnalysisResult> {
-  try {
-    // Fase 1: Escaneo con Flash (Rápido y eficiente)
-    const result = await runAnalysis(FLASH_MODEL, media);
-
-    // Escalado automático si hay dudas razonables
-    if (result.confidence < 85 || result.verdict === 'SOSPECHOSO') {
-      return await runAnalysis(PRO_MODEL, media, true);
-    }
-
-    return result;
-  } catch (error) {
-    // Fallback a Pro si Flash encuentra errores
-    return await runAnalysis(PRO_MODEL, media, true);
+    console.error("Forensic Parse Error:", textOutput);
+    throw new Error("El archivo es demasiado complejo para el análisis actual o contiene metadatos corruptos.");
   }
 }
 
